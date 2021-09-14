@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 25.0.1700.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EFCore6JoinRepro", "EFCore6JoinRepro\EFCore6JoinRepro.csproj", "{55703DA4-BC23-44C6-93F5-B71C633FC6C9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{55703DA4-BC23-44C6-93F5-B71C633FC6C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55703DA4-BC23-44C6-93F5-B71C633FC6C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55703DA4-BC23-44C6-93F5-B71C633FC6C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55703DA4-BC23-44C6-93F5-B71C633FC6C9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A29A6B13-E05A-41E1-B80C-7CEC4EBD1253}
+	EndGlobalSection
+EndGlobal
