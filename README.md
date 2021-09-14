@@ -23,7 +23,9 @@ The repro will:
 1. Check if the DB exists and if the test data has been created. 
 2. If there's no existing test data, it'll be created. This will take some time, as 500,000 images and 1,500,000 
    imagetag records need to be created.
-3. It'll then run two Linq/EFCore queries, the problematic one, and an optimised query which returns the same results.
+3. It'll then run two Linq/EFCore queries [here](https://github.com/Webreaper/EFCore6TableJoinBug/blob/main/EFCore6JoinRepro/Program.cs#L55)
+   and [here](https://github.com/Webreaper/EFCore6TableJoinBug/blob/main/EFCore6JoinRepro/Program.cs#L77), the 
+   problematic one, and an optimised query which returns the same results.
 
 The expected output is something like this (on my M1 MacBook Pro):
 
