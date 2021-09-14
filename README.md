@@ -25,7 +25,7 @@ The repro will:
    imagetag records need to be created.
 3. It'll then run two Linq/EFCore queries [here](https://github.com/Webreaper/EFCore6TableJoinBug/blob/main/EFCore6JoinRepro/Program.cs#L55)
    and [here](https://github.com/Webreaper/EFCore6TableJoinBug/blob/main/EFCore6JoinRepro/Program.cs#L77), the 
-   problematic one, and an optimised query which returns the same results.
+   problematic one, and an optimised query which returns the same results by executing a `Load` to pull in the filtered ImageTags data.
 
 The expected output is something like this (on my M1 MacBook Pro):
 
