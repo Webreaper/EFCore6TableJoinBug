@@ -8,9 +8,7 @@ namespace Dotnet6Sqlite
     {
         const string dbPath = "./TestDB.db";
 
-        public DbSet<Folder> Folders { get; set; }
         public DbSet<Image> Images { get; set; }
-        public DbSet<ImageMetaData> ImageMetaData { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<ImageTag> ImageTags { get; set; }
         public DbSet<Basket> Baskets { get; set; }
@@ -53,23 +51,10 @@ namespace Dotnet6Sqlite
                 .HasOne(a => a.Image)
                 .WithMany(b => b.BasketEntries);
 
-            modelBuilder.Entity<Image>()
-                .HasOne(img => img.MetaData)
-                .WithOne(meta => meta.Image)
-                .HasForeignKey<ImageMetaData>(i => i.ImageId);
 
             modelBuilder.Entity<ImageTag>().HasIndex(x => new { x.ImageId, x.TagId }).IsUnique();
-            modelBuilder.Entity<Image>().HasIndex(x => new { x.FolderId });
-
-            modelBuilder.Entity<ImageMetaData>().HasIndex(x => x.ImageId);
             modelBuilder.Entity<BasketEntry>().HasIndex(x => new { x.ImageId, x.BasketId }).IsUnique();
         }
-    }
-
-    public class Folder
-    {
-        [Key]
-        public int FolderId { get; set; }
     }
 
     public class Image
@@ -77,24 +62,10 @@ namespace Dotnet6Sqlite
         [Key]
         public int ImageId { get; set; }
 
-        public int FolderId { get; set; }
-        public virtual Folder Folder { get; set; }
-
-        public virtual ImageMetaData MetaData { get; set; }
         // An image can appear in many baskets
         public virtual List<BasketEntry> BasketEntries { get; } = new List<BasketEntry>();
         // An image can have many tags
         public virtual List<ImageTag> ImageTags { get; }
-    }
-
-    public class ImageMetaData
-    {
-        [Key]
-        public int MetaDataId { get; set; }
-
-        [Required]
-        public virtual Image Image { get; set; }
-        public int ImageId { get; set; }
     }
 
     public class Tag

@@ -12,6 +12,20 @@ namespace EFCore6JoinRepro
         static Random rnd = new Random();
         static int basketEntryCount = 15;
 
+        private static bool TestDataExists()
+        {
+            try
+            {
+                using var db = new TestContext();
+
+                return db.BasketEntries.Count() == basketEntryCount;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         static void Main(string[] args)
         {
             try
@@ -20,7 +34,7 @@ namespace EFCore6JoinRepro
 
                 using var db = new TestContext();
 
-                if (db.BasketEntries.Count() != basketEntryCount)
+                if (! TestDataExists())
                 {
                     db.Database.EnsureDeleted();
                     db.Database.EnsureCreated();
@@ -29,6 +43,8 @@ namespace EFCore6JoinRepro
 
                     GenerateTestData(500000);
                 }
+                else
+                    Console.WriteLine("Test data already exists.");
 
                 RunTestQuery();
             }
@@ -105,19 +121,10 @@ namespace EFCore6JoinRepro
 
             using var db = new TestContext();
 
-            Console.WriteLine($"Creating {folderCount} folders.");
-            for (int i = 0; i < folderCount; i++)
-            {
-                db.Add(new Folder());
-            }
-            db.SaveChanges();
-
-            Console.WriteLine($"Creating {imageCount} images + metadata.");
+            Console.WriteLine($"Creating {imageCount} images.");
             for (int i = 1; i <= imageCount; i++)
             {
-                var img = new Image { FolderId = rnd.Next(1, folderCount) };
-                db.Add(img);
-                db.Add(new ImageMetaData { Image = img });
+                db.Add(new Image() );
             }
             db.SaveChanges();
 
