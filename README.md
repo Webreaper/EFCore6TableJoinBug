@@ -10,7 +10,7 @@ The project includes the following data model:
 * `BasketEntries` is a single foreign-key relation to `Image`.
 
 This gives me a many-to-many relationship between image and tag, via ImageTag. Since BasketEntry and Image are 
-one-to-one, starting with db.BasketEntries acts as a filter (there is only one record in BasketEntries).
+one-to-one, starting with db.BasketEntries acts as a filter (there is only a handful of records in BasketEntries).
 
 The performance characteristics are the issue - I noticed that when I get to 500k images and 1.2m ImageTag 
 records, the above code takes more than 3 seconds to pull back the single record from BasketEntries, and hence 
