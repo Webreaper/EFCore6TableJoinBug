@@ -1,11 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Debug;
 
 namespace Dotnet6Sqlite
 {
     public class TestContext : DbContext
     {
+        public static readonly LoggerFactory _myLoggerFactory =
+                            new LoggerFactory(new[] {
+                             new DebugLoggerProvider()
+                        });
+
         const string dbPath = "./TestDB.db";
 
         public DbSet<Image> Images { get; set; }
@@ -21,7 +28,8 @@ namespace Dotnet6Sqlite
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             string dataSource = $"Data Source={dbPath}";
-            options.UseSqlite(dataSource);
+            options.UseSqlite(dataSource)
+                   .UseLoggerFactory(_myLoggerFactory);
         }
 
         /// <summary>

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using Dotnet6Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EFCore6JoinRepro
 {
@@ -11,6 +12,23 @@ namespace EFCore6JoinRepro
     {
         static Random rnd = new Random();
         static int basketEntryCount = 15;
+
+        const string s_queryFast = @"SELECT 'i'.'ImageId', 't'.'TagId'
+                                    FROM 'BasketEntries' AS 'b' 
+                                    INNER JOIN 'Images' AS 'i' ON 'b'.'ImageId' = 'i'.'ImageId' 
+                                    INNER JOIN 'ImageTags' AS 'it' ON 'i'.'ImageId' = 'it'.'ImageId' 
+                                    INNER JOIN 'Tags' as 't' on 'it'.tagId = t.TagID 
+                                    ORDER BY 'b'.'ImageId', 'i'.'ImageId', 'it'.'ImageId', 'it'.'TagId'";
+
+        const string s_efCoreQuery = @"SELECT 'b'.'ImageId', 't0'.'TagId'
+                                        FROM 'BasketEntries' AS 'b'
+                                        INNER JOIN 'Images' AS 'i' ON 'b'.'ImageId' = 'i'.'ImageId'
+                                        LEFT JOIN(
+                                           SELECT 'i0'.'ImageId', 'i0'.'TagId', 't'.'TagId' AS 'TagId0'
+                                           FROM 'ImageTags' AS 'i0'
+                                           INNER JOIN 'Tags' AS 't' ON 'i0'.'TagId' = 't'.'TagId'
+                                        ) AS 't0' ON 'i'.'ImageId' = 't0'.'ImageId'
+                                        ORDER BY 'b'.'ImageId', 'i'.'ImageId', 't0'.'ImageId', 't0'.'TagId', 't0'.'TagId0'";
 
         private static bool TestDataExists()
         {
@@ -60,7 +78,7 @@ namespace EFCore6JoinRepro
             // Now the test query
             using var db = new TestContext();
 
-            Console.WriteLine("Running query with bug...");
+            Console.WriteLine("Running standard EFCore query with bug...");
 
             Stopwatch watch = new Stopwatch();
 
@@ -75,17 +93,15 @@ namespace EFCore6JoinRepro
                            .Select( x => x.Image )
                            .ToArray();
 
-                Console.WriteLine($" Loaded {images.Count()} images, with {images.SelectMany(x => x.ImageTags).Count()} tags.");
+                Console.WriteLine($" Loaded {images.Count()} images.");
             }
 
             watch.Stop();
 
-            Console.WriteLine($"Bug Query run 5x in {watch.ElapsedMilliseconds}ms ({watch.ElapsedMilliseconds/5}ms per run).");
+            Console.WriteLine($"Bug Query run 5x in {watch.ElapsedMilliseconds}ms ({watch.ElapsedMilliseconds/5}ms per run).\n");
 
+            Console.WriteLine("Running Two-part optimized Linq query with Load...");
             watch.Reset();
-
-            Console.WriteLine("Running fixed query...");
-
             watch.Start();
 
             for (int i = 0; i < 5; i++)
@@ -104,13 +120,42 @@ namespace EFCore6JoinRepro
                         .Load();
                 }
 
-                Console.WriteLine($" Loaded {images.Count()} images, with {images.SelectMany(x => x.ImageTags).Count()} tags.");
+                Console.WriteLine($" Loaded {images.Count()} images");
             }
 
             watch.Stop();
+            Console.WriteLine($"Fixed Linq query run 5x in {watch.ElapsedMilliseconds}ms ({watch.ElapsedMilliseconds / 5}ms per run).\n");
 
-            Console.WriteLine($"Fixed Query run 5x in {watch.ElapsedMilliseconds}ms ({watch.ElapsedMilliseconds / 5}ms per run).");
+            Console.WriteLine("Running EFCore-generated query using FromSqlRaw...");
+            watch.Reset();
+            watch.Start();
 
+            for (int i = 0; i < 5; i++)
+            {
+                var sqlImages = db.Images.FromSqlRaw(s_efCoreQuery).ToList();
+                // NOTE: I'm not sure why sqlImages.Count is 45 here. There are 45 rows returned
+                // but 15 distinct images (which is correct). I'm guessing it's something to do
+                // with the way the images are converted into the DbSet, not 'distinct'ing them.
+                // No time to fix/investigate. The same happens for both SQLRaw queries, this one
+                // the the one below.
+                Console.WriteLine($" Loaded {sqlImages.Count()} images");
+            }
+
+            watch.Stop();
+            Console.WriteLine($"EFCore SQL Query run 5x in {watch.ElapsedMilliseconds}ms ({watch.ElapsedMilliseconds / 5}ms per run).\n");
+
+            Console.WriteLine("Running optimised inner-join query using FromSqlRaw...");
+            watch.Reset();
+            watch.Start();
+
+            for (int i = 0; i < 5; i++)
+            {
+                var sqlImages = db.Images.FromSqlRaw(s_queryFast).ToList();
+                Console.WriteLine($" Loaded {sqlImages.Count()} images");
+            }
+
+            watch.Stop();
+            Console.WriteLine($"SQL Query run 5x in {watch.ElapsedMilliseconds}ms ({watch.ElapsedMilliseconds / 5}ms per run).\n");
         }
 
         public static void GenerateTestData(int imageCount)
