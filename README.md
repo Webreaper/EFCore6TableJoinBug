@@ -63,7 +63,7 @@ The fix for this issue is to change the EFCore SQL generation to not use an unfi
 query. So instead of the query:
 
 ```
-SELECT "b"."ImageId", "i"."ImageId",
+SELECT "b"."ImageId", "i"."ImageId"
 FROM "BasketEntries" AS "b"
 INNER JOIN "Images" AS "i" ON "b"."ImageId" = "i"."ImageId"
 LEFT JOIN (
