@@ -67,7 +67,7 @@ SELECT "b"."ImageId", "i"."ImageId"
 FROM "BasketEntries" AS "b"
 INNER JOIN "Images" AS "i" ON "b"."ImageId" = "i"."ImageId"
 LEFT JOIN (
-   SELECT "i0"."ImageId", "i0"."TagId", "t"."TagId" AS "TagId0", "t"."Keyword"
+   SELECT "i0"."ImageId", "i0"."TagId", "t"."TagId" AS "TagId0"
    FROM "ImageTags" AS "i0"
    INNER JOIN "Tags" AS "t" ON "i0"."TagId" = "t"."TagId"
 ) AS "t0" ON "i"."ImageId" = "t0"."ImageId"
