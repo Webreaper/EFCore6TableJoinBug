@@ -26,38 +26,55 @@ The repro will:
 3. It'll then run two Linq/EFCore queries [here](https://github.com/Webreaper/EFCore6TableJoinBug/blob/main/EFCore6JoinRepro/Program.cs#L55)
    and [here](https://github.com/Webreaper/EFCore6TableJoinBug/blob/main/EFCore6JoinRepro/Program.cs#L77), the 
    problematic one, and an optimised query which returns the same results by executing a `Load` to pull in the filtered ImageTags data.
+4. It will then run the generated two querys in 'How this should be fixed' section below, using `FromSqlRaw`. 
+ 
+NOTE: that when #4 is run, for some reason the returned image count is 45, not 15 - due to the fact that 3 image rows
+are returned (one for each tag). There's probably a way to make it return 15 images each with 3 tags, but I'm new to 
+`FromSqlRaw`... but the result is the same with the EFCore-generated query and my optimised one, so meh. :)
 
 The expected output is something like this (on my M1 MacBook Pro):
 
 ```
 About to create SQLite DB...
-Successfully created DB...
-Creating 500000 images.
-Creating 10000 Tags.
-Creating 3 ImageTags for every image.
-..................................................
-Creating 5 Baskets.
-Creating 15 Basket Entries.
-Test Data created.
-Running query with bug...
- Loaded 15 images, with 45 tags.
- Loaded 15 images, with 45 tags.
- Loaded 15 images, with 45 tags.
- Loaded 15 images, with 45 tags.
- Loaded 15 images, with 45 tags.
-Bug Query run 5x in 7281ms (1456ms per run).
-Running fixed query...
- Loaded 15 images, with 45 tags.
- Loaded 15 images, with 45 tags.
- Loaded 15 images, with 45 tags.
- Loaded 15 images, with 45 tags.
- Loaded 15 images, with 45 tags.
-Fixed Query run 5x in 95ms (19ms per run).
+Test data already exists.
+Running standard EFCore query with bug...
+ Loaded 15 images.
+ Loaded 15 images.
+ Loaded 15 images.
+ Loaded 15 images.
+ Loaded 15 images.
+Bug Query run 5x in 8243ms (1648ms per run).
+
+Running Two-part optimized Linq query with Load...
+ Loaded 15 images
+ Loaded 15 images
+ Loaded 15 images
+ Loaded 15 images
+ Loaded 15 images
+Fixed Linq query run 5x in 1883ms (376ms per run).
+
+Running EFCore-generated query using FromSqlRaw...
+ Loaded 45 images
+ Loaded 45 images
+ Loaded 45 images
+ Loaded 45 images
+ Loaded 45 images
+EFCore SQL Query run 5x in 7773ms (1554ms per run).
+
+Running optimised inner-join query using FromSqlRaw...
+ Loaded 45 images
+ Loaded 45 images
+ Loaded 45 images
+ Loaded 45 images
+ Loaded 45 images
+SQL Query run 5x in 2663ms (532ms per run).
 ```
 
 You can see that by eagerly loading the data, the unfiltered inner join loads the entire `ImageTags` table 
 (1.5m records) which is extremely slow - taking 1.5s per run. Doing the filtered join results in the query 
-running 99% faster.
+running significantly faster.
+
+# How this should be fixed
 
 The fix for this issue is to change the EFCore SQL generation to not use an unfiltered select/join on the
 query. So instead of the query:
